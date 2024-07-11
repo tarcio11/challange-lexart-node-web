@@ -5,12 +5,19 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { z } from "zod"
 import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useRouter } from "next/navigation"
+import { zodResolver } from '@hookform/resolvers/zod'
+import { registerUser } from "@/api/user"
 import { toast } from "sonner"
-import { loginUser } from "@/api/user"
+import { useRouter } from "next/navigation"
 
-const loginSchema = z.object({
+const userSchema = z.object({
+  name: z
+    .string({
+      message: 'O campo é obrigatório',
+    })
+    .min(3, {
+      message: 'Mínimo de 3 caracteres',
+    }),
   email: z.string({ message: 'O campo é obrigatório' }).email({
     message: 'E-mail inválido',
   }),
@@ -19,22 +26,28 @@ const loginSchema = z.object({
   }),
 })
 
-type LoginSchema = z.infer<typeof loginSchema>
+type UserSchema = z.infer<typeof userSchema>
 
-export default function Home() {
-  const form = useForm<LoginSchema>({
-    resolver: zodResolver(loginSchema),
+export default function RegisterForm() {
+  const form = useForm<UserSchema>({
+    resolver: zodResolver(userSchema),
   })
   const router = useRouter()
 
-  const onSubmit = async (data: LoginSchema) => {
+  const onSubmit = async (data: UserSchema) => {
     try {
-      await loginUser(data)
-      toast.success('Autenticado com sucesso!', {
-        description: 'Você será redirecionado em breve',
+      await registerUser(data)
+      toast.success('Registrado com sucesso!', {
+        description: '',
+        action: {
+          label: 'Fazer login',
+          onClick: () => {
+            router.push('/')
+          },
+        },
       })
       setTimeout(() => {
-        router.push('/products')
+        router.push('/')
       }, 2000)
     } catch (error) {
       toast.error('Erro ao registrar', {
@@ -49,20 +62,40 @@ export default function Home() {
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <div className="mx-auto grid w-[350px] gap-6">
             <div className="grid gap-2 text-center">
-              <h1 className="text-3xl font-bold">Login</h1>
+              <h1 className="text-3xl font-bold">Cadastre-se</h1>
               <p className="text-balance text-muted-foreground">
-                Digite seu e-mail abaixo para fazer login em sua conta
+                Digite seus dados abaixo para criar uma conta.
               </p>
             </div>
             <div className="grid gap-4">
+            <div className="grid gap-2">
+                <Label htmlFor="name">Nome</Label>
+                <Input
+                  id="name"
+                  type="name"
+                  placeholder="Jhon Doe"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  {...form.register("name")}
+                />
+                {form.formState.errors.name && (
+                  <p className="text-xs text-destructive">
+                    {form.formState.errors.name.message}
+                  </p>
+                )}
+              </div>
               <div className="grid gap-2">
                 <Label htmlFor="email">E-mail</Label>
                 <Input
                   id="email"
                   type="email"
                   placeholder="m@example.com"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="off"
                   {...form.register("email")}
-                  />
+                />
                 {form.formState.errors.email && (
                   <p className="text-xs text-destructive">
                     {form.formState.errors.email.message}
@@ -75,10 +108,12 @@ export default function Home() {
                 </div>
                 <Input
                   id="password"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="off"
                   type="password"
-                  placeholder="********"
                   {...form.register("password")}
-                  />
+                />
                 {form.formState.errors.password && (
                   <p className="text-xs text-destructive">
                     {form.formState.errors.password.message}
@@ -90,9 +125,9 @@ export default function Home() {
               </Button>
             </div>
             <div className="mt-4 text-center text-sm">
-              Ainda não possui uma conta?{" "}
-              <Link href="/register" className="underline">
-                Registre-se
+              Já possui uma conta?{" "}
+              <Link href="/" className="underline">
+                Faça login
               </Link>
             </div>
           </div>
