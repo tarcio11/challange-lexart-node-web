@@ -57,7 +57,7 @@ export default function RegisterForm() {
   }
 
   return (
-    <div className="w-full lg:min-h-[600px] xl:min-h-[800px] flex justify-center">
+    <div className="w-full lg:min-h-screen xl:min-h-screen flex flex-col justify-center items-center">
       <div className="flex items-center justify-center py-12">
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <div className="mx-auto grid w-[350px] gap-6">
@@ -112,6 +112,7 @@ export default function RegisterForm() {
                   autoCorrect="off"
                   autoCapitalize="off"
                   type="password"
+                  placeholder="********"
                   {...form.register("password")}
                 />
                 {form.formState.errors.password && (

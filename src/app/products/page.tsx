@@ -1,7 +1,9 @@
-export default function Products() {
-  return (
-    <div>
-      <h1>Products</h1>
-    </div>
-  )
+"use client";
+import { withAuth } from "@/components/with-auth";
+import { ProductsTable } from "./components/product-table";
+
+function Products() {
+  return <ProductsTable />;
 }
+
+export default withAuth(Products);
