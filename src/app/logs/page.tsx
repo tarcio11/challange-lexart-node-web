@@ -1,4 +1,4 @@
-"use client";
+'use client'
 import { withAuth } from "@/components/with-auth";
 import { LogsProductsTable } from "./components/log-product-table";
 
