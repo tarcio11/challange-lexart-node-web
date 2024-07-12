@@ -1,5 +1,5 @@
 "use client";
-import { ListFilter, Loader2, PlusCircle } from "lucide-react";
+import { FileStack, ListCollapse, Loader2, PlusCircle, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -11,11 +11,8 @@ import {
 } from "@/components/ui/card";
 import {
   DropdownMenu,
-  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -25,79 +22,84 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Pagination } from "@/components/pagination";
-import { useEffect, useState } from "react";
-import { getProducts, getProductsExternal, ProductModel } from "@/api/products";
+import { useState } from "react";
+import { ProductModel, searchProducts } from "@/api/products";
 import { Dialog } from "@/components/ui/dialog";
 import { CreateProductModal } from "../components/create-product-modal";
 import { ProductTableRow } from "./product-table-row";
-
-type ProductsModel = {
-  data: ProductModel[];
-  total: number;
-};
+import { LoadDataProductsModal } from "./load-data-product-modal";
+import { DeleteAllProductsModal } from "./delete-all-products-modal";
+import { z } from "zod";
+import { ProductTableFilters } from "./product-table-filters";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 
 export const ProductTabFilter = () => {
-  const [type, setType] = useState<"all" | "external">("all");
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [isUpdateProductModalOpen, setIsUpdateProductModalOpen] = useState(false);
   const [isDeleteProductModalOpen, setIsDeleteProductModalOpen] = useState(false);
-  const [page, setPage] = useState(1);
+  const [isLoadDataProductModalOpen, setIsLoadDataProductModalOpen] = useState(false);
+  const [isDeleteAllProductsModalOpen, setIsDeleteAllProductsModalOpen] = useState(false);
+  const searchParams = useSearchParams()
+  const { replace } = useRouter()
+  const pathname = usePathname()
+  const params = new URLSearchParams(searchParams)
 
-  const [products, setProducts] = useState<ProductsModel>({
-    data: [],
-    total: 0,
-  });
-  const [loading, setLoading] = useState(false);
+  const name = searchParams.get('name') ?? ''
+  const external = z.coerce
+    .string()
+    .parse(searchParams.get('type') ?? 'all')
+  const page = z.coerce
+    .number()
+    .parse(searchParams.get('page') ?? '1')
 
-  function handlePaginate(pageIndex: number) {
-    setPage(pageIndex);
-  }
-
-  useEffect(() => {
-    async function fetchProducts() {
-      setLoading(true);
-      const products = type === "all"
-      ? await getProducts({ page, perPage: 10 })
-      : await getProductsExternal({ page, perPage: 10 });
-      setProducts(products.data as any);
-      setLoading(false);
+    function handlePaginate(pageIndex: number) {
+      params.set('page', String(pageIndex))
+      replace(`${pathname}?${params.toString()}`)
     }
-    fetchProducts().then();
-  }, [page, isProductModalOpen, type, isUpdateProductModalOpen, isDeleteProductModalOpen]);
+
+  const {
+    data: products,
+    isFetching: isFetchingProducts,
+    isLoading: isLoadingProducts,
+  } = useQuery({
+    queryKey: ['products/search', page, name, external],
+    queryFn: () =>
+      searchProducts({
+        page,
+        perPage: 10,
+        name,
+        external: external === 'all' ? undefined : true,
+      }),
+  })
 
   return (
     <Tabs defaultValue="all">
       <div className="flex items-center">
-        <TabsList>
-          <TabsTrigger value="all" onClick={() => setType("all")}>
-            Todos
-          </TabsTrigger>
-          <TabsTrigger value="external" onClick={() => setType("external")}>
-            Externos
-          </TabsTrigger>
-        </TabsList>
+        <ProductTableFilters />
         <div className="ml-auto flex items-center gap-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-7 gap-1">
-                <ListFilter className="h-3.5 w-3.5" />
-                <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                  Filtrar
-                </span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Filtrar por</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuCheckboxItem checked>
-                Active
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem>Draft</DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem>Archived</DropdownMenuCheckboxItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button aria-haspopup="true" variant="outline">
+              <ListCollapse className="h-4 w-4" />
+              Operações
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem className="cursor-pointer flex gap-2"
+              onClick={() => setIsLoadDataProductModalOpen(true)}
+            >
+              Carregar produtos <FileStack className="h-4 w-4" />
+            </DropdownMenuItem>
+            <DropdownMenuItem className="cursor-pointer flex gap-2"
+              onClick={() => setIsDeleteAllProductsModalOpen(true)}
+            >
+              Excluir todos os produtos <Trash2 className="h-4 w-4" />
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
           <Button
             size="sm"
             className="h-7 gap-1"
@@ -110,12 +112,12 @@ export const ProductTabFilter = () => {
           </Button>
         </div>
       </div>
-      <TabsContent value={type}>
+      <TabsContent value="all">
         <Card x-chunk="dashboard-06-chunk-0">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               Produtos
-              {loading && (
+              {isFetchingProducts && (
                 <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
               )}
             </CardTitle>
@@ -139,8 +141,7 @@ export const ProductTabFilter = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {!loading &&
-                  products.data.length > 0 &&
+                {!isFetchingProducts && !isLoadingProducts && products &&
                   products.data.map((product: ProductModel) => (
                     <ProductTableRow
                     key={product.id}
@@ -158,7 +159,7 @@ export const ProductTabFilter = () => {
             <Pagination
               currentPage={page}
               itemsPerPage={10}
-              totalItems={products.total}
+              totalItems={products?.total!}
               onPageChange={handlePaginate}
             />
           </CardFooter>
@@ -167,6 +168,12 @@ export const ProductTabFilter = () => {
 
       <Dialog open={isProductModalOpen} onOpenChange={setIsProductModalOpen}>
         <CreateProductModal closeModal={() => setIsProductModalOpen(false)} />
+      </Dialog>
+      <Dialog open={isLoadDataProductModalOpen} onOpenChange={setIsLoadDataProductModalOpen}>
+        <LoadDataProductsModal closeModal={() => setIsLoadDataProductModalOpen(false)} />
+      </Dialog>
+      <Dialog open={isDeleteAllProductsModalOpen} onOpenChange={setIsDeleteAllProductsModalOpen}>
+        <DeleteAllProductsModal closeModal={() => setIsDeleteAllProductsModalOpen(false)} />
       </Dialog>
     </Tabs>
   );

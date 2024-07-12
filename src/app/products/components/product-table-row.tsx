@@ -12,6 +12,7 @@ import { TableCell, TableRow } from "@/components/ui/table";
 import { Dialog } from "@/components/ui/dialog";
 import { UpdateProductModal } from "./update-product-modal";
 import { DeleteProductModal } from "./delete-product-modal";
+import { DateUtils } from "@/utils/date";
 
 export interface ProductTableRowProps {
   product: ProductModel;
@@ -22,16 +23,14 @@ export interface ProductTableRowProps {
 }
 
 export const ProductTableRow = ({ isUpdateModalOpen, setIsUpdateModalOpen, isDeleteModalOpen, setIsDeleteModalOpen, product }: ProductTableRowProps) => {
-  // const [isUpdateProductModalOpen, setIsUpdateProductModalOpen] = useState(false);
-
   return (
     <TableRow key={product.id}>
       <TableCell className="font-medium">{product.name}</TableCell>
       <TableCell>${product.price}</TableCell>
       <TableCell className="hidden md:table-cell">{product.stock}</TableCell>
-      <TableCell className="hidden md:table-cell">Interno</TableCell>
+      <TableCell className="hidden md:table-cell">{product.isExternal ? 'Externo' : 'Interno'}</TableCell>
       <TableCell className="hidden md:table-cell">
-        {new Date(product.createdAt).toDateString()}
+        {DateUtils.formatDate(new Date(product.createdAt!))}
       </TableCell>
       <TableCell>
         <DropdownMenu>

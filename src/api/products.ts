@@ -5,6 +5,13 @@ type GetProductsParams = {
   perPage: number
 }
 
+type SearchProductsParams = GetProductsParams & {
+  name?: string
+  id?: string
+  external?: boolean,
+  withDeleted?: boolean
+}
+
 type CreateProductModel = {
   name: string
   price: number
@@ -20,11 +27,20 @@ export type ProductModel = {
   name: string
   price: number
   stock: number
+  isExternal?: boolean
   createdAt: Date
+  deletedAt?: Date
 }
 
-type ProductsModel = {
-  data: ProductModel[],
+export type ProductsModel = {
+  data: {
+    data: ProductModel[]
+    total: number
+  },
+}
+
+export type ProductsModelApplication = {
+  data: ProductModel[]
   total: number
 }
 
@@ -36,6 +52,22 @@ export async function getProducts({ page, perPage }: GetProductsParams): Promise
     },
   })
   return response.data
+}
+
+export async function searchProducts({ page, perPage, name, id, external, withDeleted }: SearchProductsParams): Promise<ProductsModelApplication> {
+  console.log(page, perPage, name, id, external, withDeleted);
+
+  const response = await api.get<ProductsModel>('/products/search', {
+    params: {
+      page: page,
+      perPage: perPage ?? 10,
+      id: id ?? null,
+      name: name ?? null,
+      external: external ?? null,
+      withDeleted: withDeleted ?? null,
+    },
+  })
+  return response.data.data
 }
 
 export async function getProductsExternal({ page, perPage }: GetProductsParams): Promise<ProductsModel> {
@@ -58,4 +90,12 @@ export async function updateProduct(data: UpdateProductModel) {
 
 export async function deleteProduct(id: string) {
   await api.delete(`/products/${id}`)
+}
+
+export async function loadDataProducts() {
+  await api.post(`/products/load`)
+}
+
+export async function deleteAllProducts() {
+  await api.delete(`/products`)
 }

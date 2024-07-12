@@ -3,6 +3,8 @@ import { Inter as FontSans } from "next/font/google"
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { Toaster } from "sonner";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { queryClient } from "@/lib/react-query";
 
 const fontSans = FontSans({
   subsets: ["latin"],
@@ -25,8 +27,10 @@ export default function RootLayout({
           "min-h-screen bg-background font-sans antialiased",
           fontSans.variable
         )}>
-          {children}
-          <Toaster richColors />
+          <QueryClientProvider client={queryClient}>
+            {children}
+            <Toaster richColors />
+          </QueryClientProvider>
       </body>
     </html>
   );

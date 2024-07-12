@@ -7,22 +7,20 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useRouter } from "next/navigation";
-import { deleteProduct } from "@/api/products";
+import { loadDataProducts } from "@/api/products";
 
-export interface  DeleteProductModalProps {
+export interface  LoadDataProductsModalProps {
   closeModal: () => void
-  id: string
 }
 
-export function DeleteProductModal({ closeModal, id }: DeleteProductModalProps) {
+export function LoadDataProductsModal({ closeModal }: LoadDataProductsModalProps) {
   async function onSubmit() {
     try {
-      await deleteProduct(id)
-      toast.success('Produto excluido com sucesso!')
+      await loadDataProducts()
+      toast.success('Produtos carregados com sucesso!')
       closeModal()
     } catch (error) {
-      toast.error('Erro ao excluir produto', {
+      toast.error('Erro ao carregar produtos', {
         description: 'Tente novamente mais tarde',
       })
     }
@@ -31,17 +29,17 @@ export function DeleteProductModal({ closeModal, id }: DeleteProductModalProps) 
   return (
     <DialogContent className="sm:max-w-[520px]">
       <DialogHeader>
-        <DialogTitle>Excluir produto</DialogTitle>
+        <DialogTitle>Carregar produtos</DialogTitle>
         <DialogDescription>
-          Tem certeza que deseja excluir este produto?
+          Você tem certeza que deseja carregar 50 produtos?
         </DialogDescription>
       </DialogHeader>
       <DialogFooter>
-        <Button variant='secondary' onClick={closeModal}>
+        <Button variant="ghost" onClick={closeModal}>
           Cancelar
         </Button>
-        <Button variant="destructive" onClick={onSubmit}>
-          Excluir
+        <Button onClick={onSubmit}>
+          Carregar dados
         </Button>
       </DialogFooter>
     </DialogContent>

@@ -3,6 +3,7 @@
 import {
   Home,
   LineChart,
+  Logs,
   Package,
   Package2,
   Settings,
@@ -28,9 +29,15 @@ export const Sidebar = () => {
         </Link>
         <NavItem
           icon={Package}
-          href="/rewards"
+          href="/products"
           title="Produtos"
           isSelected={pathname === 'products'}
+        />
+        <NavItem
+          icon={Logs}
+          href="/logs"
+          title="Logs"
+          isSelected={pathname === 'logs'}
         />
       </nav>
       <nav className="mt-auto flex flex-col items-center gap-4 px-2 sm:py-5">

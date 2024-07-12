@@ -6,4 +6,5 @@ export const isUserAuthenticated = () => {
     setToken(token)
     return true
   }
+  return false
 }
